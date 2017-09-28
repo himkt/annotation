@@ -1,11 +1,11 @@
 #! env python
 
-import argparse
-import json
-import natto
-import os.path
 import subprocess
+import argparse
+import natto
+import json
 import sys
+import os
 
 PWD = os.path.dirname(os.path.realpath(__file__))  # NOQA
 sys.path.append(os.path.join(PWD, '../src/'))  # NOQA
@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
         while True:
             len_sequence = len(surfaces)
-            ground_truthes = [None for _ in range(len_sequence)]
+            ground_truthes = ['o' for _ in range(len_sequence)]
 
             cursor_position = 0
             while cursor_position < len_sequence:
@@ -73,8 +73,17 @@ if __name__ == '__main__':
                     ground_truthes.append('EOS')
                     break
 
-                print('\t'.join(surfaces_))
-                ground_truth = input('label ("bt" if you wanna go back): ')
+                ret = [(s_, g_) for s_, g_ in zip(surfaces_, ground_truthes)]
+
+                left = max(0, cursor_position-10)
+                right = min(len_sequence, cursor_position+10)
+
+                message = input_sentence
+                message += '\n'.join([f'{s_}({g_})' for s_, g_ in ret[left:right]])  # NOQA
+                message += '\n' + 'label or bt: '
+                print(message)
+
+                ground_truth = input() or 'o'
 
                 if ground_truth == 'bt':
                     cursor_position -= 1
@@ -91,7 +100,12 @@ if __name__ == '__main__':
             for s, m, l in zip(surfaces, features, ground_truthes):
                 print(f'{s}\t{m}\t{l}')
 
-            if input('ok? [y/n]: ') == 'y':
+            while True:
+                ans = input('ok? [y/n]: ')
+                if ans in ['y', 'n']:
+                    break
+
+            if ans == 'y':
                 for s, m, l in zip(surfaces, features, ground_truthes):
                     print(f'{s}\t{m}\t{l}', file=args.annotation_file)
 
